@@ -1,7 +1,5 @@
 package fr.mrmephisto.game1.entities;
 
-import java.util.ArrayList;
-
 import fr.mrmephisto.game1.InputHandler;
 import fr.mrmephisto.game1.bombs.BasicBomb;
 import fr.mrmephisto.game1.gfx.Colour;
@@ -10,7 +8,7 @@ import fr.mrmephisto.game1.level.Level;
 
 /**
  * 
- * @author MrMephisto 05/12/2016 17:00
+ * @author MrMephisto 06/12/2016 22:50
  *
  */
 
@@ -23,23 +21,18 @@ public class Player extends Mob {
 	// mechanics
 	public boolean isSwimming = false;
 	private int tickCount = 0;
-	private int agility;
+
 	// bombs
 
 	public Player(Level level, int x, int y, InputHandler input) {
 		super(level, "Player", x, y, 1);
 		this.input = input;
-		this.agility = 10;
 	}
-	
-	public void setAgility(int a){
-		this.agility = a;
-	}
-	
+
 	/********************************************************
 	 * MECHANICS
 	 ********************************************************/
-	
+
 	/*
 	 * Warning! the collision box is a rectangle where the angles on the player
 	 * are located: 1. On the top left pixel of his pants; 2. On the top right
@@ -74,8 +67,6 @@ public class Player extends Mob {
 
 		return false;
 	}
-	
-	
 
 	/********************************************************
 	 * TICK
@@ -100,9 +91,12 @@ public class Player extends Mob {
 		}
 		// a bomb is posed
 		if (input.space.isPressed()) {
-			BasicBomb b = new BasicBomb(level, this.x, this.y);
-			this.level.addBasicBomb(b);
-			
+			// the player can't drop a bomb in water
+			if (!this.isSwimming) {
+				BasicBomb b = new BasicBomb(level, this.x, this.y);
+				this.level.addBasicBomb(b);
+			}
+
 		}
 
 		// walking:
@@ -121,7 +115,7 @@ public class Player extends Mob {
 			this.isSwimming = false;
 		}
 
-		//Bomb.removeExplodedBombs(bombs);
+		// Bomb.removeExplodedBombs(bombs);
 		tickCount++;
 	}
 
