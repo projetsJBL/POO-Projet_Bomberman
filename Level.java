@@ -16,7 +16,7 @@ import fr.mrmephisto.game1.level.tiles.Tile;
 /**
  * Level class rendering tiles for the actual level
  * 
- * @author MrMephisto 04/12/2016 04/12/2016
+ * @author MrMephisto 07/12/2016 19:00
  */
 public class Level {
 	private byte[] tiles;
@@ -27,6 +27,8 @@ public class Level {
 	// Image for the level
 	private String imagePath;
 	private BufferedImage image;
+	//tilt if a bomb exploding
+	private boolean tilt;
 
 	/**
 	 * @param imagePath
@@ -53,6 +55,10 @@ public class Level {
 			return Tile.VOID;
 
 		return Tile.tiles[tiles[x + y * width]];
+	}
+
+	public List<BasicBomb> getBombs() {
+		return bombs;
 	}
 
 	/********************************************************
@@ -157,7 +163,19 @@ public class Level {
 		if (yOffset > ((height << 3) - screen.height))
 			yOffset = ((height << 3) - screen.height);
 
-		screen.setOffset(xOffset, yOffset);
+		if (tilt) {
+			if (System.currentTimeMillis() % 60 < 30) {
+				screen.setOffset(xOffset, yOffset + 1);	
+			} else {
+				tilt = false;
+				screen.setOffset(xOffset, yOffset);
+			}
+		} else{
+			tilt = false;
+			screen.setOffset(xOffset, yOffset);
+		}
+	
+		
 
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -178,10 +196,10 @@ public class Level {
 			entity.render(screen);
 		}
 	}
-	
+
 	/*
 	 * To generate bombs in level
-	 */	
+	 */
 	public void addBasicBomb(BasicBomb bomb) {
 		// if it's the first bomb the player pose it.
 		if (bombs.isEmpty())
@@ -194,13 +212,15 @@ public class Level {
 				this.bombs.add(bomb);
 			}
 		}
-					
-		
+
 	}
 
 	public void renderBasicBomb(Screen screen) {
-		for (BasicBomb b : bombs) {
-			b.render(screen);
+		if (!bombs.isEmpty()) {
+			for (BasicBomb b : bombs) {
+
+				b.render(screen);
+			}
 		}
 	}
 
@@ -219,18 +239,31 @@ public class Level {
 			else
 				t.tick();
 		}
-		
+
 		for (Entity entity : entities) {
 			// check the entities class (tick for the player is moving depending
 			// on
 			// the inputhanlder)
 			entity.tick();
 		}
-		
-		for(BasicBomb b : bombs){
-			b.tick();
+
+		boolean remove = false;
+		if (!bombs.isEmpty()) {
+			for (BasicBomb b : bombs) {
+				if (b.isExploding()) 
+					this.tilt = true;
+					
+				b.tick();
+				if (b.hasExploded()) {
+					remove = true;
+					this.tilt = true;
+				}
+				
+			}
+			if (remove){
+				bombs.remove(0);
+			}
 		}
-		
 	}
 
 	public void alterTile(int x, int y, Tile newTile) {
