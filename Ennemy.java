@@ -1,6 +1,6 @@
-
 package fr.Bomber.game.entities;
 
+import fr.Bomber.comportement.Comportement;
 import fr.Bomber.game.Game;
 import fr.Bomber.game.bombs.BasicBomb;
 import fr.Bomber.game.gfx.Colour;
@@ -11,19 +11,23 @@ public class Ennemy extends Mob {
 
 	// colors of the ennemy
 	private int colour;
+	private Comportement C;
 	private int scale = 1;
-	private int comportement;
+
 	// mechanics
 	public boolean isSwimming = false;
 	private int tickCount = 0;
 
+	private boolean combat;
+
 	// bombs
 
 	public Ennemy(Level level, int x, int y, int speed, int colour1, int colour2, int colour3, int colour4,
-			int comportement) {
+			Comportement C) {
 		super(level, "Ennemy", x, y, speed);
 		this.colour = Colour.get(colour1, colour2, colour3, colour4);
-		this.comportement = comportement;
+		this.C = C;
+
 	}
 
 	public boolean hasCollided(int dx, int dy) {
@@ -137,6 +141,7 @@ public class Ennemy extends Mob {
 
 		int dx = 0;
 		int dy = 0;
+
 		int xP = Game.getPlayer().x;
 		int yP = Game.getPlayer().y;
 
@@ -145,36 +150,60 @@ public class Ennemy extends Mob {
 
 		long Time = System.currentTimeMillis() / 500;
 		if (Math.abs(dist_x) < 40 && Math.abs(dist_y) < 40) {
+			combat = true;
 
 			if (Time % 4 == 0) {
-				// System.out.println("Ils sont a côté! x: " + dist_x + " / y: "
+				// System.out.println("Ils sont a cÃ´tÃ©! x: " + dist_x + " / y: "
 				// + dist_y);
 				// the ennemy can't drop a bomb in water
 				if (!this.isSwimming) {
 					BasicBomb b = new BasicBomb(level, this.x, this.y);
 					this.level.addBasicBomb(b);
+
 				}
-
 			}
-			// int vitesse[] = poursuite(vecteurEP, dx, dy);
-			// dx = vitesse[0];
-			// dy = vitesse[1];
-		}
-		int dir = direction();
+			int dir = direction();
 
-		switch (dir) {
-		case 0:
-			dy--;
-			break;
-		case 1:
-			dx--;
-			break;
-		case 2:
-			dy++;
-			break;
-		case 3:
-			dx++;
+			switch (dir) {
+			case 0:
+				dy--;
+				break;
+			case 1:
+				dx--;
+				break;
+			case 2:
+				dy++;
+				break;
+			case 3:
+				dx++;
+				break;
+			case 4:
+				dx = 0;
+				dy = 0;
+				break;
+			}
+		} else {
+			combat = false;
+			int dir = direction();
 
+			switch (dir) {
+			case 0:
+				dy--;
+				break;
+			case 1:
+				dx--;
+				break;
+			case 2:
+				dy++;
+				break;
+			case 3:
+				dx++;
+				break;
+			case 4:
+				dx = 0;
+				dy = 0;
+				break;
+			}
 		}
 		// walking:
 		if (dx != 0 || dy != 0)
@@ -204,38 +233,81 @@ public class Ennemy extends Mob {
 		int min = 0;
 		int max = 1;
 		long Time = System.currentTimeMillis() / 500;
-		if (0 <= Time % 13 && Time % 13 < 2) {
-			this.setComportement(min + (int) (Math.random() * ((max - min) + 1)));
-			System.out.println(Time / 500);
-			System.out.println(this.comportement);
 
+		if (0 <= Time % 13 && Time % 13 < 2) {
+			if (!this.C.hasChanged()) {
+				this.C.setType(min + (int) (Math.random() * ((max - min) + 1)));
+			}
 		}
 
-		switch (this.comportement) {
-
-		case 0:
-			if (0 <= Time % 13 && Time % 13 < 3) {
-				dir = 1;// dx--
-			} else if (3 <= Time % 13 && Time % 13 < 6) {
-				dir = 0;// dy--
-			} else if (6 <= Time % 13 && Time % 13 < 9) {
-				dir = 3;// dx++
-			} else if (9 <= Time % 13 && Time % 1 < 12) {
-				dir = 2;// dy++
+		if (this.hasCollided(this.x + 1, this.y + 1) || this.hasCollided(this.x - 1, this.y + 1)
+				|| this.hasCollided(this.x + 1, this.y - 1) || this.hasCollided(this.x - 1, this.y - 1)) {
+			if (!this.C.hasChanged()) {
+				this.C.setType(0);
 			}
-			break;
+		}
+		if (!combat) {
 
-		case 1:
-			if (0 <= Time % 13 && Time % 13 < 3) {
-				dir = 3;// dx++
-			} else if (3 <= Time % 13 && Time % 13 < 6) {
-				dir = 2;// dy++
-			} else if (6 <= Time % 13 && Time % 13 < 9) {
-				dir = 1;// dx--
-			} else if (9 <= Time % 13 && Time % 1 < 12) {
-				dir = 0;// dy--
+			switch (this.C.getType()) {
+
+			case 0:
+				if (0 <= Time % 15 && Time % 15 < 3) {
+					dir = 1;// dx--
+				} else if (3 <= Time % 15 && Time % 15 < 6) {
+					dir = 0;// dy--
+				} else if (6 <= Time % 15 && Time % 15 < 8) {
+					dir = 4;// Arret
+				} else if (8 <= Time % 15 && Time % 15 < 10) {
+					dir = 3;// dx++
+				} else if (10 <= Time % 15 && Time % 15 < 13) {
+					dir = 2; // dy++
+				} else {
+					dir = 4;
+				}
+				break;
+
+			case 1:
+				if (0 <= Time % 15 && Time % 15 < 3) {
+					dir = 2;// dy++
+				} else if (3 <= Time % 15 && Time % 15 < 6) {
+					dir = 3;// dx++
+				} else if (6 <= Time % 15 && Time % 15 < 8) {
+					dir = 4;// Arret
+				} else if (8 <= Time % 15 && Time % 15 < 10) {
+					dir = 0;// dy--
+				} else if (10 <= Time % 15 && Time % 15 < 13) {
+					dir = 1;// dx--
+				} else {
+					dir = 4;
+				}
+				break;
 			}
-			break;
+		} else {
+			switch (this.C.getType()) {
+			case 0:
+				if (0 <= Time % 8 && Time % 8 < 2) {
+					dir = 1;// dx--
+				} else if (2 <= Time % 8 && Time % 8 < 4) {
+					dir = 0;// dy--
+				} else if (4 <= Time % 8 && Time % 8 < 6) {
+					dir = 3;// dx++
+				} else if (6 <= Time % 8 && Time % 8 < 7) {
+					dir = 2;// dy++
+				}
+				break;
+
+			case 1:
+				if (0 <= Time % 8 && Time % 8 < 2) {
+					dir = 3;// dx++
+				} else if (2 <= Time % 8 && Time % 8 < 4) {
+					dir = 2;// dy++
+				} else if (4 <= Time % 8 && Time % 8 < 6) {
+					dir = 1;// dx--
+				} else if (6 <= Time % 8 && Time % 8 < 7) {
+					dir = 0;// dy--
+				}
+				break;
+			}
 		}
 
 		/*
@@ -245,34 +317,17 @@ public class Ennemy extends Mob {
 		 * < 3) { dir = 2;// dy++ } else if (3 <= Time / 500 % 6 && Time / 500 %
 		 * 6 < 5) { dir = 0;// dy-- } break;
 		 */
+
+		Time = 0;
 		return dir;
 
 	}
 
-	public int getComportement() {
-		return comportement;
+	public Comportement getComportement() {
+		return C;
 	}
 
-	public void setComportement(int comportement) {
-		this.comportement = comportement;
+	public void setComportement(Comportement comportement) {
+		this.C = comportement;
 	}
-
-	/*
-	 * public int[] poursuite(int[] vecteurEP, int dx, int dy) { int[] vitesse =
-	 * new int[2];
-	 * 
-	 * if (vecteurEP[0] < 0 && vecteurEP[1] > 0) { dx++; dy++;
-	 * 
-	 * } else if (vecteurEP[0] > 0 && vecteurEP[1] < 0) { dx--; dy++;
-	 * 
-	 * } else if (vecteurEP[0] < 0 && vecteurEP[1] < 0) { dx--; dy--;
-	 * 
-	 * } else if (vecteurEP[0] > 0 && vecteurEP[1] > 0) { dx++; dy--;
-	 * 
-	 * }
-	 * 
-	 * vitesse[0] = dx; vitesse[1] = dy;
-	 * 
-	 * return vitesse; }
-	 */
 }
