@@ -1,5 +1,8 @@
 package fr.mrmephisto.game1.entities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import fr.mrmephisto.game1.InputHandler;
 import fr.mrmephisto.game1.bombs.BasicBomb;
 import fr.mrmephisto.game1.gfx.Colour;
@@ -8,7 +11,7 @@ import fr.mrmephisto.game1.level.Level;
 
 /**
  * 
- * @author MrMephisto 06/12/2016 22:50
+ * @author MrMephisto 13/12/2016 18:23
  *
  */
 
@@ -20,10 +23,9 @@ public class Player extends Mob {
 	private int scale = 1;
 	// mechanics
 	public boolean isSwimming = false;
+	public static boolean gettingDamage;
 	private int tickCount = 0;
-
-	// bombs
-
+	
 	public Player(Level level, int x, int y, InputHandler input) {
 		super(level, "Player", x, y, 1);
 		this.input = input;
@@ -89,15 +91,18 @@ public class Player extends Mob {
 		if (input.right.isPressed()) {
 			dx++;
 		}
-		// a bomb is posed
+		// BOMB DROP
+		/*
 		if (input.space.isPressed()) {
 			// the player can't drop a bomb in water
-			if (!this.isSwimming) {
+			if (!this.isSwimming && this.bombNumber > 0) {
 				BasicBomb b = new BasicBomb(level, this.x, this.y);
 				this.level.addBasicBomb(b);
+				this.bombNumber --;
 			}
 
 		}
+		*/
 
 		// walking:
 		if (dx != 0 || dy != 0) {
@@ -155,7 +160,8 @@ public class Player extends Mob {
 			xTile += 4 + ((numSteps >> walkingSpeed) & 1) * 2;
 			flipTop = (movingDir - 1) % 2;
 		}
-		// if the player is swimming
+		
+		// SWIMMING
 		if (isSwimming) {
 			int waterColour = 0;
 			yOffset += 4;
@@ -179,14 +185,11 @@ public class Player extends Mob {
 					0x01, 1);
 		}
 
-		// BOMBS
-
 		// We have a 2x2 tiles player so we have to
 		// render the 4 tiles of the font. Be careful with animations: the
 		// adjustments with 'flipTop' or 'flipBottom' on the xOffset prevent a
 		// bug where the player is cut in half when he is walking. first: up
 		// left
-
 		// Top of the body
 		screen.render(xOffset + (tileModifier * flipTop), yOffset, xTile
 				+ yTile * 32, colour, flipTop, scale);
