@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import fr.mrmephisto.game1.GameEvents;
 import fr.mrmephisto.game1.bombs.BasicBomb;
 import fr.mrmephisto.game1.entities.Entity;
 import fr.mrmephisto.game1.gfx.Screen;
@@ -27,7 +28,7 @@ public class Level {
 	// Image for the level
 	private String imagePath;
 	private BufferedImage image;
-	//tilt if a bomb exploding
+	// tilt if a bomb exploding
 	private boolean tilt;
 
 	/**
@@ -165,17 +166,15 @@ public class Level {
 
 		if (tilt) {
 			if (System.currentTimeMillis() % 60 < 30) {
-				screen.setOffset(xOffset, yOffset + 1);	
+				screen.setOffset(xOffset, yOffset + 1);
 			} else {
 				tilt = false;
 				screen.setOffset(xOffset, yOffset);
 			}
-		} else{
+		} else {
 			tilt = false;
 			screen.setOffset(xOffset, yOffset);
 		}
-	
-		
 
 		for (int y = 0; y < height; y++) {
 			for (int x = 0; x < width; x++) {
@@ -202,14 +201,16 @@ public class Level {
 	 */
 	public void addBasicBomb(BasicBomb bomb) {
 		// if it's the first bomb the player pose it.
-		if (bombs.isEmpty())
+		if (bombs.isEmpty()){
 			bombs.add(bomb);
+			GameEvents.bombs--;
 		// else we prevent a bomb to be to close to another.
-		else {
-			BasicBomb lastBomb = bombs.get(bombs.size() - 1);
+		}else {
+			BasicBomb lastBomb = bombs.get(bombs.size() - 1);			
 			// the speed of bomb drop is defined by the player's agility
 			if ((bomb.getId() - lastBomb.getId()) >= 200) {
 				this.bombs.add(bomb);
+				GameEvents.bombs--;
 			}
 		}
 
@@ -242,25 +243,24 @@ public class Level {
 
 		for (Entity entity : entities) {
 			// check the entities class (tick for the player is moving depending
-			// on
-			// the inputhanlder)
+			// on the inputhanlder)
 			entity.tick();
 		}
 
 		boolean remove = false;
 		if (!bombs.isEmpty()) {
 			for (BasicBomb b : bombs) {
-				if (b.isExploding()) 
+				if (b.isExploding())
 					this.tilt = true;
-					
+
 				b.tick();
 				if (b.hasExploded()) {
 					remove = true;
 					this.tilt = true;
 				}
-				
+
 			}
-			if (remove){
+			if (remove) {
 				bombs.remove(0);
 			}
 		}
